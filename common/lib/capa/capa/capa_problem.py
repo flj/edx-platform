@@ -34,6 +34,8 @@ from capa.safe_exec import safe_exec
 
 from pytz import UTC
 
+from random import Random
+
 # dict of tagname, Response Class -- this should come from auto-registering
 response_tag_dict = dict([(x.response_tag, x) for x in responsetypes.__all__])
 
@@ -381,202 +383,129 @@ class LoncapaProblem(object):
             answer_ids.append(results.keys())
         return answer_ids
 
-    # def sample_from_answer_pool(self, choices, rnd, numChoices):
-    #     """
-    #     Takes in:
-    #         1. list of choices
-    #         2. random number generator
-    #         3. max number of total choices to return
+    def sample_from_answer_pool(self, choices, rnd, num_choices):
+        """
+        Takes in:
+            1. list of choices
+            2. random number generator
+            3. max number of total choices to return
 
-    #     Returns a list with 2 items:
-    #         1. the solutionID corresponding with the chosen correct answer
-    #         2. (subset) list of choice nodes with 3 incorrect and 1 correct
-    #     """
+        Returns a list with 2 items:
+            1. the solution_id corresponding with the chosen correct answer
+            2. (subset) list of choice nodes with 3 incorrect and 1 correct
+        """
 
-    #     correctChoices = []
-    #     incorrectChoices = []
-    #     subsetChoices = []
+        correct_choices = []
+        incorrect_choices = []
+        subset_choices = []
 
-    #     for choice in choices:
-    #         if choice.get('correct') == 'true':
-    #             correctChoices.append(choice)
-    #         elif choice.get('correct') == 'false':
-    #             incorrectChoices.append(choice)
+        for choice in choices:
+            if choice.get('correct') == 'true':
+                correct_choices.append(choice)
+            elif choice.get('correct') == 'false':
+                incorrect_choices.append(choice)
 
-    #     # Always 1 correct and numChoices at least as large as this; if not, return list with no choices
-    #     numCorrect = 1
-    #     if len(correctChoices) < numCorrect or numChoices < numCorrect:
-    #         return []
+        # Always 1 correct and num_choices at least as large as this; if not, return list with no choices
+        num_correct = 1
+        if len(correct_choices) < num_correct or num_choices < num_correct:
+            return []
 
-    #     # Ensure number of incorrect choices is no more than the number of incorrect choices to choose from
-    #     numIncorrect = numChoices - numCorrect
-    #     numIncorrect = min(numIncorrect, len(incorrectChoices))
+        # Ensure number of incorrect choices is no more than the number of incorrect choices to choose from
+        num_incorrect = num_choices - num_correct
+        num_incorrect = min(num_incorrect, len(incorrect_choices))
 
-    #     # Use rnd given to us to generate a random number (see details in tree_using_answer_pool method)
-    #     ix = rnd.randint(0, len(correctChoices) - 1)
-    #     correctChoice = correctChoices[ix]
-    #     subsetChoices.append(correctChoice)
-    #     solutionID = correctChoice.get('explanation-id')
+        # Use rnd given to us to generate a random number (see details in tree_using_answer_pool method)
+        index = rnd.randint(0, len(correct_choices) - 1)
+        correct_choice = correct_choices[index]
+        subset_choices.append(correct_choice)
+        solution_id = correct_choice.get('explanation-id')
 
-    #     # Add incorrect choices
-    #     toAdd = numIncorrect
-    #     while toAdd > 0:
-    #         ix = rnd.randint(0, len(incorrectChoices) - 1)
-    #         choice = incorrectChoices[ix]
-    #         subsetChoices.append(choice)
-    #         incorrectChoices.remove(choice)
-    #         toAdd = toAdd - 1
+        # Add incorrect choices
+        to_add = num_incorrect
+        while to_add > 0:
+            index = rnd.randint(0, len(incorrect_choices) - 1)
+            choice = incorrect_choices[index]
+            subset_choices.append(choice)
+            incorrect_choices.remove(choice)
+            to_add = to_add - 1
 
-    #     # Randomize correct answer position
-    #     ix = rnd.randint(0, numIncorrect)
-    #     if ix != 0:
-    #         tmp = subsetChoices[ix]
-    #         subsetChoices[ix] = subsetChoices[0] # where we put the correct answer
-    #         subsetChoices[0] = tmp
+        # Randomize correct answer position
+        index = rnd.randint(0, num_incorrect)
+        if index != 0:
+            tmp = subset_choices[index]
+            subset_choices[index] = subset_choices[0]  # where we put the correct answer
+            subset_choices[0] = tmp
 
-    #     return [solutionID, subsetChoices]
+        return [solution_id, subset_choices]
 
+    def tree_using_answer_pool(self, tree):
+        """
+        Allows for problem questions with a pool of answers, from which answer options shown to the student
+        and randomly selected so that there is always 1 correct answer and n-1 incorrect answers,
+        where the user specifies n as the value of the attribute "answer-pool" within <multiplechoiceresponse>
 
-    # def tree_using_answer_pool(self, tree):
-    #     """
-    #     Allows for problem questions with a pool of answers, from which answer options shown to the student
-    #     and randomly selected so that there is always 1 correct answer and n-1 incorrect answers,
-    #     where the user specifies n as the value of the attribute "answer-pool" within <multiplechoiceresponse>
-        
-    #     The <multiplechoiceresponse> tag must have an attribute 'answer-pool' with integer value of n
-    #       - if so, this method will return a modified version of the tree
-    #       - if not, this method will return the original tree
+        The <multiplechoiceresponse> tag must have an attribute 'answer-pool' with integer value of n
+          - if so, this method will return a modified version of the tree
+          - if not, this method will return the original tree
 
-    #     These problems are colloquially known as "Gradiance" problems.
-    #     """
+        These problems are colloquially known as "Gradiance" problems.
+        """
 
-    #     query = '//multiplechoiceresponse[@answer-pool]'
+        query = '//multiplechoiceresponse[@answer-pool]'
 
-    #     # There are no questions with an answer pool
-    #     if not tree.xpath(query):
-    #         return tree
+        # There are no questions with an answer pool
+        if not tree.xpath(query):
+            return tree
 
-    #     # Uses self.seed -- but want to randomize every time reaches this problem,
-    #     # so problem's "randomization" should be set to "always"
-    #     rnd = Random(self.seed)
+        # Uses self.seed -- but want to randomize every time reaches this problem,
+        # so problem's "randomization" should be set to "always"
+        rnd = Random(self.seed)
 
-    #     for multChoiceResponse in tree.xpath(query):
-    #         # Determine number of choices to display; if invalid number of choices, skip over
-    #         numChoices = multChoiceResponse.get('answer-pool')
-    #         if not numChoices.isdigit():
-    #             continue
-    #         numChoices = int(numChoices)
-    #         if numChoices < 1:
-    #             continue
+        for mult_choice_response in tree.xpath(query):
+            # Determine number of choices to display; if invalid number of choices, skip over
+            num_choices = mult_choice_response.get('answer-pool')
+            if not num_choices.isdigit():
+                continue
+            num_choices = int(num_choices)
+            if num_choices < 1:
+                continue
 
-    #         # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
-    #         choicegroup = multChoiceResponse.xpath('./choicegroup[@type="MultipleChoice"]')[0]
-    #         choicesList = list(choicegroup.iter('choice'))
+            # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
+            choicegroup = mult_choice_response.xpath('./choicegroup[@type="MultipleChoice"]')[0]
+            choices_list = list(choicegroup.iter('choice'))
 
-    #         # Remove all choices in the choicesList (we will add some back in later)
-    #         for choice in choicesList:
-    #             choicegroup.remove(choice)
+            # Remove all choices in the choices_list (we will add some back in later)
+            for choice in choices_list:
+                choicegroup.remove(choice)
 
-    #         # Sample from the answer pool to get the subset choices and solution id
-    #         [solutionID, subsetChoices] = self.sample_from_answer_pool(choicesList, rnd, numChoices)
+            # Sample from the answer pool to get the subset choices and solution id
+            [solution_id, subset_choices] = self.sample_from_answer_pool(choices_list, rnd, num_choices)
 
-    #         # Add back in randomly selected choices
-    #         for choice in subsetChoices:
-    #             choicegroup.append(choice)
+            # Add back in randomly selected choices
+            for choice in subset_choices:
+                choicegroup.append(choice)
 
-    #         # Filter out solutions that don't correspond to the correct answer we selected to show
-    #         solutionset = multChoiceResponse.xpath('./following-sibling::solutionset')
-    #         if len(solutionset) != 0:
-    #             solutionset = solutionset[0]
-    #             solutions = solutionset.xpath('./solution')
-    #             for solution in solutions:
-    #                 if solution.get('explanation-id') != solutionID:
-    #                     solutionset.remove(solution)
+            # Filter out solutions that don't correspond to the correct answer we selected to show
+            solutionset = mult_choice_response.xpath('./following-sibling::solutionset')
+            if len(solutionset) != 0:
+                solutionset = solutionset[0]
+                solutions = solutionset.xpath('./solution')
+                for solution in solutions:
+                    if solution.get('explanation-id') != solution_id:
+                        solutionset.remove(solution)
 
-    #     return tree
-
-    # def tree_using_targeted_feedback(self, tree):
-    #     """
-    #     Allows for problem questions to show targeted feedback, which are choice-level explanations.
-    #     Targeted feedback is automatically visible after a student has submitted their answers.
-        
-    #     The <multiplechoiceresponse> tag must have an attribute 'targeted-feedback':
-    #       - if so, this method will return a modified version of the tree
-    #       - if not, this method will return 'None'
-    #       - if the value is 'alwaysShowCorrectChoiceExplanation', then the correct-choice
-    #         explanation will be automatically visible too after a student has submitted answers 
-
-    #     Note if the value is 'alwaysShowCorrectChoiceExplanation', you probably want to set
-    #     the "Show Answer" setting to "Never" because now there's no need for a "Show Answer"
-    #     button because no solution will show up if you were to click the "Show Answer" button
-    #     """
-
-    #     query = '//multiplechoiceresponse[@targeted-feedback]'
-
-    #     # There are no questions with targeted feedback
-    #     if not tree.xpath(query):
-    #         return tree
-
-    #     for multChoiceResponse in tree.xpath(query):
-    #         showExplanation = multChoiceResponse.get('targeted-feedback') == 'alwaysShowCorrectChoiceExplanation'
-
-    #         # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
-    #         choicegroup = multChoiceResponse.xpath('./choicegroup[@type="MultipleChoice"]')[0]
-    #         choicegroupID = choicegroup.get('id')
-    #         choicesList = list(choicegroup.iter('choice'))
-            
-    #         studentAnswer = None
-    #         explanationIDForStudentAnswer = None
-
-    #         # Find the student answer key that matches our <choicegroup> id
-    #         keysOfStudentAnswers = self.student_answers.keys()
-    #         for key in keysOfStudentAnswers:
-    #             if key == choicegroupID:
-    #                 studentAnswer = self.student_answers[key]
-    #                 break
-
-    #         # Keep track of the explanation-id that corresponds to the student's answer
-    #         # Also, keep track of the solution-id
-    #         solutionID = None
-    #         for choice in choicesList:
-    #             if choice.get('name') == studentAnswer:
-    #                 explanationIDForStudentAnswer = choice.get('explanation-id')
-    #             if choice.get('correct') == 'true':
-    #                 solutionID = choice.get('explanation-id')
-
-    #         # Filter out targetedfeedback that doesn't correspond to the answer the student selected
-    #         # Note: following-sibling will grab all following siblings, so we just want the first in the list
-    #         targetedfeedbackset = multChoiceResponse.xpath('./following-sibling::targetedfeedbackset')
-    #         if len(targetedfeedbackset) != 0:
-    #             targetedfeedbackset = targetedfeedbackset[0]
-    #             targetedfeedbacks = targetedfeedbackset.xpath('./targetedfeedback')
-    #             for targetedfeedback in targetedfeedbacks:
-    #                 # Don't show targeted feedback if the student hasn't answer the problem
-    #                 # or if the target feedback doesn't match the student's (incorrect) answer
-    #                 if not self.done or targetedfeedback.get('explanation-id') != explanationIDForStudentAnswer:
-    #                     targetedfeedbackset.remove(targetedfeedback)
-
-    #         # Change our correct-choice explanation from a "solution explanation" to within
-    #         # the set of targeted feedback, which means the explanation will render on the page
-    #         # without the student clicking "Show Answer" or seeing a checkmark next to the correct choice
-    #         solutionset = multChoiceResponse.xpath('./following-sibling::solutionset')
-    #         if showExplanation and self.done and len(solutionset) != 0:
-    #             solutionset = solutionset[0]
-    #             solutions = solutionset.xpath('./solution')
-    #             for solution in solutions:
-    #                 # Add our solution instead to the targetedfeedbackset and change its tag name
-    #                 if solution.get('explanation-id') == solutionID:
-    #                     solutionset.remove(solution)
-    #                     solution.tag = 'targetedfeedback'
-    #                     targetedfeedbackset.append(solution)
-
-    #     return tree
+        return tree
 
     def get_html(self):
         '''
         Main method called externally to get the HTML to be rendered for this capa Problem.
         '''
-        html = contextualize_text(etree.tostring(self._extract_html(self.tree)), self.context)
+
+        process_this = self.tree
+        process_this = self.tree_using_answer_pool(process_this)
+
+        html = contextualize_text(etree.tostring(self._extract_html(process_this)), self.context)
+
         return html
 
     def handle_input_ajax(self, data):
@@ -753,8 +682,7 @@ class LoncapaProblem(object):
             # other than to examine .tag to see if it's a string. :(
             return
 
-        if (problemtree.tag == 'script' and problemtree.get('type')
-            and 'javascript' in problemtree.get('type')):
+        if (problemtree.tag == 'script' and problemtree.get('type') and 'javascript' in problemtree.get('type')):
             # leave javascript intact.
             return deepcopy(problemtree)
 
