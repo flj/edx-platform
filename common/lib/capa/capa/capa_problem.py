@@ -486,6 +486,7 @@ class LoncapaProblem(object):
                 choicegroup.append(choice)
 
             # Filter out solutions that don't correspond to the correct answer we selected to show
+            # Note that this means that if the user simply provides a <solution> tag, nothing is filtered
             solutionset = mult_choice_response.xpath('./following-sibling::solutionset')
             if len(solutionset) != 0:
                 solutionset = solutionset[0]
