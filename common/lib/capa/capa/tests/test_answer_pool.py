@@ -26,28 +26,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="4">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -68,28 +68,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="4">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -110,28 +110,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse>
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -151,28 +151,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="0">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -192,28 +192,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="2.3">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -233,28 +233,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="5">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -275,28 +275,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="4">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -304,28 +304,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="3">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -355,28 +355,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="3">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
@@ -384,28 +384,28 @@ class CapaAnswerPoolTest(unittest.TestCase):
             <p>What is the correct answer?</p>
             <multiplechoiceresponse answer-pool="4">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
+                    <p>This is the 1st solution</p>
                     <p>Not much to explain here, sorry!</p>
                 </div>
                 </solution>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
+                <solution>
+                <div class="detailed-solution">
                     <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                    <p>This is the 2nd solution</p>
                 </div>
                 </solution>
             </solutionset>
