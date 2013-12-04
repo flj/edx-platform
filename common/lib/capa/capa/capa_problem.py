@@ -34,7 +34,6 @@ from capa.safe_exec import safe_exec
 
 from pytz import UTC
 
-from random import Random
 
 # dict of tagname, Response Class -- this should come from auto-registering
 response_tag_dict = dict([(x.response_tag, x) for x in responsetypes.__all__])
@@ -387,12 +386,12 @@ class LoncapaProblem(object):
         """
         Allows for problem questions to show targeted feedback, which are choice-level explanations.
         Targeted feedback is automatically visible after a student has submitted their answers.
-        
+
         The <multiplechoiceresponse> tag must have an attribute 'targeted-feedback':
           - if so, this method will modify the tree
           - if not, this method will not modify the tree
           - if the value is 'alwaysShowCorrectChoiceExplanation', then the correct-choice
-            explanation will be automatically visible too after a student has submitted answers 
+            explanation will be automatically visible too after a student has submitted answers
 
         Note if the value is 'alwaysShowCorrectChoiceExplanation', you probably want to set
         the "Show Answer" setting to "Never" because now there's no need for a "Show Answer"
@@ -410,25 +409,18 @@ class LoncapaProblem(object):
 
             # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
             choicegroup = mult_choice_response.xpath('./choicegroup[@type="MultipleChoice"]')[0]
-            choicegroup_id = choicegroup.get('id')
             choices_list = list(choicegroup.iter('choice'))
-            
-            studentAnswer = None
-            explanation_id_for_student_answer = None
 
             # Find the student answer key that matches our <choicegroup> id
-            keysOfStudentAnswers = self.student_answers.keys()
-            for key in keysOfStudentAnswers:
-                if key == choicegroup_id:
-                    studentAnswer = self.student_answers[key]
-                    break
+            student_answer = self.student_answers.get(choicegroup.get('id'))
+            expl_id_for_student_answer = None
 
             # Keep track of the explanation-id that corresponds to the student's answer
             # Also, keep track of the solution-id
             solution_id = None
             for choice in choices_list:
-                if choice.get('name') == studentAnswer:
-                    explanation_id_for_student_answer = choice.get('explanation-id')
+                if choice.get('name') == student_answer:
+                    expl_id_for_student_answer = choice.get('explanation-id')
                 if choice.get('correct') == 'true':
                     solution_id = choice.get('explanation-id')
 
@@ -441,7 +433,7 @@ class LoncapaProblem(object):
                 for targetedfeedback in targetedfeedbacks:
                     # Don't show targeted feedback if the student hasn't answer the problem
                     # or if the target feedback doesn't match the student's (incorrect) answer
-                    if not self.done or targetedfeedback.get('explanation-id') != explanation_id_for_student_answer:
+                    if not self.done or targetedfeedback.get('explanation-id') != expl_id_for_student_answer:
                         targetedfeedbackset.remove(targetedfeedback)
 
             # Do not displace the solution under these circumstances
@@ -481,10 +473,8 @@ class LoncapaProblem(object):
         Main method called externally to get the HTML to be rendered for this capa Problem.
         '''
 
-        process_this = self.tree
-        process_this = self.tree_using_targeted_feedback(process_this)
-
-        html = contextualize_text(etree.tostring(self._extract_html(process_this)), self.context)
+        self.tree_using_targeted_feedback(self.tree)
+        html = contextualize_text(etree.tostring(self._extract_html(self.tree)), self.context)
 
         return html
 
@@ -662,8 +652,7 @@ class LoncapaProblem(object):
             # other than to examine .tag to see if it's a string. :(
             return
 
-        if (problemtree.tag == 'script' and problemtree.get('type')
-            and 'javascript' in problemtree.get('type')):
+        if (problemtree.tag == 'script' and problemtree.get('type') and 'javascript' in problemtree.get('type')):
             # leave javascript intact.
             return deepcopy(problemtree)
 
