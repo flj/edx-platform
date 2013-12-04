@@ -455,7 +455,7 @@ class LoncapaProblem(object):
 
         # There are no questions with an answer pool
         if not tree.xpath(query):
-            return tree
+            return
 
         # Uses self.seed -- but want to randomize every time reaches this problem,
         # so problem's "randomization" should be set to "always"
@@ -501,10 +501,8 @@ class LoncapaProblem(object):
         Main method called externally to get the HTML to be rendered for this capa Problem.
         '''
 
-        process_this = self.tree
-        process_this = self.tree_using_answer_pool(process_this)
-
-        html = contextualize_text(etree.tostring(self._extract_html(process_this)), self.context)
+        self.tree_using_answer_pool(self.tree)
+        html = contextualize_text(etree.tostring(self._extract_html(self.tree)), self.context)
 
         return html
 

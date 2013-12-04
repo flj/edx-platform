@@ -17,8 +17,6 @@ class CapaAnswerPoolTest(unittest.TestCase):
         super(CapaAnswerPoolTest, self).setUp()
         self.system = test_system()
 
-    # def test_no_answer_pool_4_choices(self):
-
     def test_answer_pool_4_choices_1_multiplechoiceresponse_seed1(self):
         xml_str = textwrap.dedent("""
             <problem>
@@ -28,15 +26,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -44,7 +42,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -70,15 +68,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -86,7 +84,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -112,15 +110,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -128,7 +126,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -153,15 +151,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -169,7 +167,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -194,15 +192,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -210,7 +208,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -235,15 +233,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -251,7 +249,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -277,15 +275,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -293,7 +291,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -306,15 +304,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -322,7 +320,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -357,15 +355,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -373,7 +371,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
@@ -386,15 +384,15 @@ class CapaAnswerPoolTest(unittest.TestCase):
               <choicegroup type="MultipleChoice">
                 <choice correct="false">wrong-1</choice>
                 <choice correct="false">wrong-2</choice>
-                <choice correct="true">correct-1</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
                 <choice correct="false">wrong-3</choice>
                 <choice correct="false">wrong-4</choice>
-                <choice correct="true">correct-2</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
             <solutionset>
-                <solution>
+                <solution explanation-id="solution1">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 1st solution</p>
@@ -402,7 +400,7 @@ class CapaAnswerPoolTest(unittest.TestCase):
                 </div>
                 </solution>
 
-                <solution>
+                <solution explanation-id="solution2">
                 <div class="detailed-solution">
                     <p>Explanation</p>
                     <p>This is the 2nd solution</p>
