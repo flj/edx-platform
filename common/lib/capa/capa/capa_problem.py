@@ -389,8 +389,8 @@ class LoncapaProblem(object):
         Targeted feedback is automatically visible after a student has submitted their answers.
         
         The <multiplechoiceresponse> tag must have an attribute 'targeted-feedback':
-          - if so, this method will return a modified version of the tree
-          - if not, this method will return 'None'
+          - if so, this method will modify the tree
+          - if not, this method will not modify the tree
           - if the value is 'alwaysShowCorrectChoiceExplanation', then the correct-choice
             explanation will be automatically visible too after a student has submitted answers 
 
@@ -403,7 +403,7 @@ class LoncapaProblem(object):
 
         # There are no questions with targeted feedback
         if not tree.xpath(query):
-            return tree
+            return
 
         for mult_choice_response in tree.xpath(query):
             show_explanation = mult_choice_response.get('targeted-feedback') == 'alwaysShowCorrectChoiceExplanation'
@@ -450,28 +450,31 @@ class LoncapaProblem(object):
 
             # The next element should either be <solution> or <solutionset>
             next_element = targetedfeedbackset.getnext()
-            theSolution = None
+            parent_element = tree
+            solution_element = None
             if next_element.tag == 'solution':
-                theSolution = next_element
+                solution_element = next_element
             elif next_element.tag == 'solutionset':
                 solutions = next_element.xpath('./solution')
                 for solution in solutions:
                     if solution.get('explanation-id') == solution_id:
-                        theSolution = solution
-                        # next_element.remove(solution)
-                        # tree.remove(solution)
-                        # solution.tag = 'targetedfeedback'
-                        # targetedfeedbackset.append(solution)
+                        parent_element = next_element
+                        solution_element = solution
+
+            # If could not find the solution element, then skip the remaining steps below
+            if solution_element is None:
+                continue
 
             # Change our correct-choice explanation from a "solution explanation" to within
             # the set of targeted feedback, which means the explanation will render on the page
             # without the student clicking "Show Answer" or seeing a checkmark next to the correct choice
-            tree.remove(theSolution)
-            # Add our solution instead to the targetedfeedbackset and change its tag name
-            theSolution.tag = 'targetedfeedback'
-            targetedfeedbackset.append(theSolution)
+            parent_element.remove(solution_element)
 
-        return tree
+            # Add our solution instead to the targetedfeedbackset and change its tag name
+            solution_element.tag = 'targetedfeedback'
+            targetedfeedbackset.append(solution_element)
+
+        return
 
     def get_html(self):
         '''
