@@ -22,36 +22,54 @@ class CapaTargetedFeedbackTest(unittest.TestCase):
     def test_answer_pool_4_choices_1_multiplechoiceresponse_seed1(self):
         xml_str = textwrap.dedent("""
             <problem>
-
             <p>What is the correct answer?</p>
-            <multiplechoiceresponse answer-pool="4">
+            <multiplechoiceresponse targeted-feedback="alwaysShowCorrectChoiceExplanations">
               <choicegroup type="MultipleChoice">
-                <choice correct="false" explanation-id="solution1w">wrong-1</choice>
-                <choice correct="false" explanation-id="solution2w">wrong-2</choice>
-                <choice correct="true" explanation-id="solution1">correct-1</choice>
-                <choice correct="false" explanation-id="solution3w">wrong-3</choice>
-                <choice correct="false" explanation-id="solution4w">wrong-4</choice>
-                <choice correct="true" explanation-id="solution2">correct-2</choice>
+                <choice correct="false" explanation-id="feedback1">wrong-1</choice>
+                <choice correct="false" explanation-id="feedback2">wrong-2</choice>
+                <choice correct="true" explanation-id="feedbackC">correct-1</choice>
+                <choice correct="false" explanation-id="feedback3">wrong-3</choice>
               </choicegroup>
             </multiplechoiceresponse>
 
-            <solutionset>
-                <solution explanation-id="solution1">
-                <div class="detailed-solution" >
-                    <p>Explanation</p>
-                    <p>xThis is the 1st solution</p>
-                    <p>Not much to explain here, sorry!</p>
+            <targetedfeedbackset>
+                <targetedfeedback explanation-id="feedback1">
+                <div class="detailed-targeted-feedback" >
+                    <p>Targeted Feedback</p>
+                    <p>This is the 1st WRONG solution</p>
                 </div>
-                </solution>
+                </targetedfeedback>
 
-                <solution explanation-id="solution2">
-                <div class="detailed-solution" >
-                    <p>Explanation</p>
-                    <p>xThis is the 2nd solution</p>
+                <targetedfeedback explanation-id="feedback2">
+                <div class="detailed-targeted-feedback" >
+                    <p>Targeted Feedback</p>
+                    <p>This is the 2nd WRONG solution</p>
                 </div>
-                </solution>
-            </solutionset>
+                </targetedfeedback>
 
+                <targetedfeedback explanation-id="feedback3">
+                <div class="detailed-targeted-feedback" >
+                    <p>Targeted Feedback</p>
+                    <p>This is the 3rd WRONG solution</p>
+                </div>
+                </targetedfeedback>
+
+                <targetedfeedback explanation-id="feedbackC">
+                <div class="detailed-targeted-feedback-correct">
+                    <p>Targeted Feedback</p>
+                    <p>Feedback on your correct solution...</p>
+                </div>
+                </targetedfeedback>
+
+            </targetedfeedbackset>
+
+            <solution explanation-id="feedbackC">
+            <div class="detailed-solution" >
+                <p>Explanation</p>
+                <p>This is the solution explanation</p>
+                <p>Not much to explain here, sorry!</p>
+            </div>
+            </solution>
         </problem>
 
         """)
@@ -60,6 +78,40 @@ class CapaTargetedFeedbackTest(unittest.TestCase):
         problem.seed = 723
         the_html = problem.get_html()
         self.assertRegexpMatches(the_html, r"<div>.*\[.*'wrong-3'.*'wrong-1'.*'wrong-2'.*'correct-2'.*\].*</div>")
+
+        # problem = new_loncapa_problem(xml_str, seed=56)
+        # problem = new_loncapa_problem(xml_str)
+        # problem.seed = 56
+        # problem.done = True
+        # problem.student_answers = {'1_2_1': 'choice_3'}
+
+        # the_html = problem.get_html()
+
+        # # print "\n\n"
+        # # print the_html
+        # # print "\n\n"
+
+        # # ipdb.set_trace()
+
+        # self.assertRegexpMatches(the_html, r"<div>.*\[.*'wrong-4'.*'wrong-3'.*'wrong-2'.*'correct-2'.*\].*</div>")
+        # self.assertRegexpMatches(the_html, r"3rd WRONG")
+        # self.assertRegexpMatches(the_html, r"2nd solution")
+        # self.assertNotRegexpMatches(the_html, r"1st solution")
+
+        # problem = new_loncapa_problem(xml_str)
+        # rnd = Random()
+        # ix = rnd.randint(0, 20)
+        # problem.seed = ix
+        # the_html = problem.get_html()
+
+        # print the_html
+        # self.assertEqual(1, 2)
+        # self.assertRegexpMatches(the_html, r"<div>.*\[.*'A'.*'B'.*'C'.*\].*</div>.*")
+
+
+
+
+
 
     def test_answer_pool_4_choices_1_multiplechoiceresponse_seed2(self):
         xml_str = textwrap.dedent("""
