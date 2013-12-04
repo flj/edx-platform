@@ -136,6 +136,8 @@ all solution elements within a <solutionset>, and make sure to add an attribute 
 "explanation-id" to both the <solution> tag and its corresponding <choice> tag, and be
 sure that the value for this "explanation-id" attribute is the same for both. Note that
 this feature is only supported in the advanced XML problem editor, not the regular one.
+Also note that if you want your question to have a different set of answers for different
+attempts, be sure in the problem settings in Studio to set "Randomization" to "Always"
 
 LMS: Fixed accessibility bug where users could not tab through wiki (LMS-1307)
 
