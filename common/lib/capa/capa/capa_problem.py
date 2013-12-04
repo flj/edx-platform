@@ -445,8 +445,8 @@ class LoncapaProblem(object):
         where the user specifies n as the value of the attribute "answer-pool" within <multiplechoiceresponse>
 
         The <multiplechoiceresponse> tag must have an attribute 'answer-pool' with integer value of n
-          - if so, this method will return a modified version of the tree
-          - if not, this method will return the original tree
+          - if so, this method will modify the tree
+          - if not, this method will not modify the tree
 
         These problems are colloquially known as "Gradiance" problems.
         """
@@ -495,7 +495,7 @@ class LoncapaProblem(object):
                     if solution.get('explanation-id') != solution_id:
                         solutionset.remove(solution)
 
-        return tree
+        return
 
     def get_html(self):
         '''
