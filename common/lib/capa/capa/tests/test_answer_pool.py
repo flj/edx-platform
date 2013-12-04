@@ -425,3 +425,83 @@ class CapaAnswerPoolTest(unittest.TestCase):
         without_new_lines = the_html.replace("\n", "")
 
         self.assertRegexpMatches(without_new_lines, str1 + r".*" + str2)
+
+    def test_answer_pool_and_no_answer_pool(self):
+        xml_str = textwrap.dedent("""
+            <problem>
+
+            <p>What is the correct answer?</p>
+            <multiplechoiceresponse>
+              <choicegroup type="MultipleChoice">
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
+              </choicegroup>
+            </multiplechoiceresponse>
+
+            <solutionset>
+                <solution explanation-id="solution1">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 1st solution</p>
+                    <p>Not much to explain here, sorry!</p>
+                </div>
+                </solution>
+
+                <solution explanation-id="solution2">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 2nd solution</p>
+                </div>
+                </solution>
+            </solutionset>
+
+            <p>What is the correct answer?</p>
+            <multiplechoiceresponse answer-pool="4">
+              <choicegroup type="MultipleChoice">
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
+              </choicegroup>
+            </multiplechoiceresponse>
+
+            <solutionset>
+                <solution explanation-id="solution1">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 1st solution</p>
+                    <p>Not much to explain here, sorry!</p>
+                </div>
+                </solution>
+
+                <solution explanation-id="solution2">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 2nd solution</p>
+                </div>
+                </solution>
+            </solutionset>
+
+        </problem>
+
+        """)
+
+        problem = new_loncapa_problem(xml_str)
+        problem.seed = 723
+        the_html = problem.get_html()
+
+        str1 = r"<div>.*\[.*'wrong-1'.*'wrong-2'.*'correct-1'.*'wrong-3'.*'wrong-4'.*'correct-2'.*\].*</div>"
+        str2 = r"<div>.*\[.*'wrong-3'.*'wrong-1'.*'wrong-2'.*'correct-2'.*\].*</div>"
+
+        self.assertRegexpMatches(the_html, str1)
+        self.assertRegexpMatches(the_html, str2)
+
+        without_new_lines = the_html.replace("\n", "")
+
+        self.assertRegexpMatches(without_new_lines, str1 + r".*" + str2)
