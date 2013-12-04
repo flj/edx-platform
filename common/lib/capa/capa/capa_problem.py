@@ -34,6 +34,8 @@ from capa.safe_exec import safe_exec
 
 from pytz import UTC
 
+from random import Random
+
 # dict of tagname, Response Class -- this should come from auto-registering
 response_tag_dict = dict([(x.response_tag, x) for x in responsetypes.__all__])
 
@@ -381,11 +383,93 @@ class LoncapaProblem(object):
             answer_ids.append(results.keys())
         return answer_ids
 
+    def tree_using_targeted_feedback(self, tree):
+        """
+        Allows for problem questions to show targeted feedback, which are choice-level explanations.
+        Targeted feedback is automatically visible after a student has submitted their answers.
+        
+        The <multiplechoiceresponse> tag must have an attribute 'targeted-feedback':
+          - if so, this method will return a modified version of the tree
+          - if not, this method will return 'None'
+          - if the value is 'alwaysShowCorrectChoiceExplanation', then the correct-choice
+            explanation will be automatically visible too after a student has submitted answers 
+
+        Note if the value is 'alwaysShowCorrectChoiceExplanation', you probably want to set
+        the "Show Answer" setting to "Never" because now there's no need for a "Show Answer"
+        button because no solution will show up if you were to click the "Show Answer" button
+        """
+
+        query = '//multiplechoiceresponse[@targeted-feedback]'
+
+        # There are no questions with targeted feedback
+        if not tree.xpath(query):
+            return tree
+
+        for mult_choice_response in tree.xpath(query):
+            show_explanation = mult_choice_response.get('targeted-feedback') == 'alwaysShowCorrectChoiceExplanation'
+
+            # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
+            choicegroup = mult_choice_response.xpath('./choicegroup[@type="MultipleChoice"]')[0]
+            choicegroup_id = choicegroup.get('id')
+            choices_list = list(choicegroup.iter('choice'))
+            
+            studentAnswer = None
+            explanation_id_for_student_answer = None
+
+            # Find the student answer key that matches our <choicegroup> id
+            keysOfStudentAnswers = self.student_answers.keys()
+            for key in keysOfStudentAnswers:
+                if key == choicegroup_id:
+                    studentAnswer = self.student_answers[key]
+                    break
+
+            # Keep track of the explanation-id that corresponds to the student's answer
+            # Also, keep track of the solution-id
+            solution_id = None
+            for choice in choices_list:
+                if choice.get('name') == studentAnswer:
+                    explanation_id_for_student_answer = choice.get('explanation-id')
+                if choice.get('correct') == 'true':
+                    solution_id = choice.get('explanation-id')
+
+            # Filter out targetedfeedback that doesn't correspond to the answer the student selected
+            # Note: following-sibling will grab all following siblings, so we just want the first in the list
+            targetedfeedbackset = mult_choice_response.xpath('./following-sibling::targetedfeedbackset')
+            if len(targetedfeedbackset) != 0:
+                targetedfeedbackset = targetedfeedbackset[0]
+                targetedfeedbacks = targetedfeedbackset.xpath('./targetedfeedback')
+                for targetedfeedback in targetedfeedbacks:
+                    # Don't show targeted feedback if the student hasn't answer the problem
+                    # or if the target feedback doesn't match the student's (incorrect) answer
+                    if not self.done or targetedfeedback.get('explanation-id') != explanation_id_for_student_answer:
+                        targetedfeedbackset.remove(targetedfeedback)
+
+            # Change our correct-choice explanation from a "solution explanation" to within
+            # the set of targeted feedback, which means the explanation will render on the page
+            # without the student clicking "Show Answer" or seeing a checkmark next to the correct choice
+            solutionset = mult_choice_response.xpath('./following-sibling::solutionset')
+            if show_explanation and self.done and len(solutionset) != 0:
+                solutionset = solutionset[0]
+                solutions = solutionset.xpath('./solution')
+                for solution in solutions:
+                    # Add our solution instead to the targetedfeedbackset and change its tag name
+                    if solution.get('explanation-id') == solution_id:
+                        solutionset.remove(solution)
+                        solution.tag = 'targetedfeedback'
+                        targetedfeedbackset.append(solution)
+
+        return tree
+
     def get_html(self):
         '''
         Main method called externally to get the HTML to be rendered for this capa Problem.
         '''
-        html = contextualize_text(etree.tostring(self._extract_html(self.tree)), self.context)
+
+        process_this = self.tree
+        process_this = self.tree_using_targeted_feedback(process_this)
+
+        html = contextualize_text(etree.tostring(self._extract_html(process_this)), self.context)
+
         return html
 
     def handle_input_ajax(self, data):
