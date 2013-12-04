@@ -444,19 +444,32 @@ class LoncapaProblem(object):
                     if not self.done or targetedfeedback.get('explanation-id') != explanation_id_for_student_answer:
                         targetedfeedbackset.remove(targetedfeedback)
 
+            # Do not displace the solution under these circumstances
+            if not show_explanation or not self.done:
+                continue
+
+            # The next element should either be <solution> or <solutionset>
+            next_element = targetedfeedbackset.getnext()
+            theSolution = None
+            if next_element.tag == 'solution':
+                theSolution = next_element
+            elif next_element.tag == 'solutionset':
+                solutions = next_element.xpath('./solution')
+                for solution in solutions:
+                    if solution.get('explanation-id') == solution_id:
+                        theSolution = solution
+                        # next_element.remove(solution)
+                        # tree.remove(solution)
+                        # solution.tag = 'targetedfeedback'
+                        # targetedfeedbackset.append(solution)
+
             # Change our correct-choice explanation from a "solution explanation" to within
             # the set of targeted feedback, which means the explanation will render on the page
             # without the student clicking "Show Answer" or seeing a checkmark next to the correct choice
-            solutionset = mult_choice_response.xpath('./following-sibling::solutionset')
-            if show_explanation and self.done and len(solutionset) != 0:
-                solutionset = solutionset[0]
-                solutions = solutionset.xpath('./solution')
-                for solution in solutions:
-                    # Add our solution instead to the targetedfeedbackset and change its tag name
-                    if solution.get('explanation-id') == solution_id:
-                        solutionset.remove(solution)
-                        solution.tag = 'targetedfeedback'
-                        targetedfeedbackset.append(solution)
+            tree.remove(theSolution)
+            # Add our solution instead to the targetedfeedbackset and change its tag name
+            theSolution.tag = 'targetedfeedback'
+            targetedfeedbackset.append(theSolution)
 
         return tree
 
