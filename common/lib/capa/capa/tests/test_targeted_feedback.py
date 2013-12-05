@@ -17,8 +17,6 @@ class CapaTargetedFeedbackTest(unittest.TestCase):
         super(CapaTargetedFeedbackTest, self).setUp()
         self.system = test_system()
 
-    # def test_no_answer_pool_4_choices(self):
-
     def test_targeted_feedback_not_finished(self):
         xml_str = textwrap.dedent("""
             <problem>
