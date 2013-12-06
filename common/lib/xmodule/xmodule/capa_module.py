@@ -908,7 +908,7 @@ class CapaModule(CapaFields, XModule):
 
         return {'grade': score['score'], 'max_grade': score['total']}
 
-    def check_problem(self, data):
+    def check_problem(self, data, current_time=datetime.datetime.now(UTC())):
         """
         Checks whether answers to a problem are correct
 
@@ -937,7 +937,6 @@ class CapaModule(CapaFields, XModule):
 
         # Problem queued. Students must wait a specified waittime before they are allowed to submit
         if self.lcp.is_queued():
-            current_time = datetime.datetime.now(UTC())
             prev_submit_time = self.lcp.get_recentmost_queuetime()
 
             waittime_between_requests = self.system.xqueue['waittime']
@@ -947,10 +946,9 @@ class CapaModule(CapaFields, XModule):
                 return {'success': msg, 'html': ''}  # Prompts a modal dialog in ajax callback
 
         # Wait time between resets
-        current_time = datetime.datetime.now(UTC())
         if self.last_submission_time is not None:
             if (current_time - self.last_submission_time).total_seconds() < self.submission_wait_seconds:
-                seconds_left = int(self.submission_wait_seconds - (current_time - self.last_submission_time).total_seconds()) + 1
+                seconds_left = int(self.submission_wait_seconds - (current_time - self.last_submission_time).total_seconds())
                 msg = u'You must wait at least {w} between submissions. {s} remaining.'.format(
                     w=self.pretty_print_seconds(self.submission_wait_seconds), s=self.pretty_print_seconds(seconds_left))
                 return {'success': msg, 'html': ''}  # Prompts a modal dialog in ajax callback
@@ -1026,7 +1024,7 @@ class CapaModule(CapaFields, XModule):
         if(num_seconds < 60):
             plural = "s" if num_seconds > 1 else ""
             return "%i second%s" % (num_seconds, plural)
-        elif(num_seconds < 60*60):
+        elif(num_seconds < 60 * 60):
             return "%i min, %i sec" % (int(num_seconds / 60), num_seconds % 60)
         else:
             return "%i hrs, %i min, %i sec" % (int(num_seconds / 3600), int((num_seconds % 3600) / 60), (num_seconds % 60))

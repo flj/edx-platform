@@ -85,7 +85,9 @@ class CapaFactory(object):
                problem_state=None,
                correct=False,
                done=None,
-               text_customization=None
+               text_customization=None,
+               last_submission_time=None,
+               submission_wait_seconds=None
                ):
         """
         All parameters are optional, and are added to the created problem if specified.
@@ -123,6 +125,10 @@ class CapaFactory(object):
             field_data['done'] = done
         if text_customization is not None:
             field_data['text_customization'] = text_customization
+        if last_submission_time is not None:
+            field_data['last_submission_time'] = last_submission_time
+        if submission_wait_seconds is not None:
+            field_data['submission_wait_seconds'] = submission_wait_seconds
 
         descriptor = Mock(weight="1")
         if problem_state is not None:
@@ -149,6 +155,7 @@ class CapaFactory(object):
 
         return module
 
+
 class XModuleQuizAttemptsDelayTest(unittest.TestCase):
     '''
     Testing class
@@ -164,23 +171,122 @@ class XModuleQuizAttemptsDelayTest(unittest.TestCase):
         # in the capa grace period format, not in time delta format
         self.two_day_delta_str = "2 days"
 
-    def test_check_problem_resubmitted_with_randomize(self):
-        rerandomize_values = ['always', 'true']
+    # def test_check_problem_resubmitted_with_randomize(self):
+    #     rerandomize_values = ['always', 'true']
 
-        for rerandomize in rerandomize_values:
-            # Randomize turned on
-            module = CapaFactory.create(rerandomize=rerandomize, attempts=0)
+    #     for rerandomize in rerandomize_values:
+    #         # Randomize turned on
+    #         module = CapaFactory.create(rerandomize=rerandomize, attempts=0)
 
-            # Simulate that the problem is completed
-            module.done = True
+    #         # Simulate that the problem is completed
+    #         module.done = True
 
-            # Expect that we cannot submit
-            with self.assertRaises(xmodule.exceptions.NotFoundError):
-                get_request_dict = {CapaFactory.input_key(): '3.14'}
-                module.check_problem(get_request_dict)
+    #         # Expect that we cannot submit
+    #         with self.assertRaises(xmodule.exceptions.NotFoundError):
+    #             get_request_dict = {CapaFactory.input_key(): '3.14'}
+    #             module.check_problem(get_request_dict)
 
-            # Expect that number of attempts NOT incremented
-            self.assertEqual(module.attempts, 0)
+    #         # Expect that number of attempts NOT incremented
+    #         self.assertEqual(module.attempts, 0)
+
+    def test_first_submission(self):
+        # Not attempted yet
+        num_attempts = 0
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=None)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Expect that we can submit
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict)
+
+        # Successfully submitted and answered
+        # Also, the number of attempts should increment by 1
+        self.assertEqual(result['success'], 'correct')
+        self.assertEqual(module.attempts, num_attempts + 1)
+
+    def test_no_wait_time(self):
+        # Already attempted once (just now) and thus has a submitted time
+        num_attempts = 1
+        last_submitted_time = datetime.datetime.now(UTC)
+        now = last_submitted_time
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted_time, submission_wait_seconds=0)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Expect that we can submit
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, now)
+
+        # Successfully submitted and answered
+        # Also, the number of attempts should increment by 1
+        self.assertEqual(result['success'], 'correct')
+        self.assertEqual(module.attempts, num_attempts + 1)
+
+    def test_submit_quiz_in_rapid_succession(self):
+        # Already attempted once (just now) and thus has a submitted time
+        num_attempts = 1
+        last_submitted_time = datetime.datetime.now(UTC)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted_time, submission_wait_seconds=600)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict)
+
+        # You should get a dialog that tells you to wait
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least.*")
+        self.assertEqual(module.attempts, num_attempts)
+
+    def test_submit_quiz_too_soon_exact_times_established(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Set up exact times
+        last_submitted = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 0, 18, 36)
+
+        now = datetime.datetime.now(UTC)
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted, submission_wait_seconds=180)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # You should get a dialog that tells you to wait 2 minutes
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least 3 min, 0 sec between submissions. 2 min, 0 sec remaining\..*")
+        self.assertEqual(module.attempts, num_attempts)
+
+    # def test_check_problem_resubmitted_no_randomize(self):
+    #     rerandomize_values = ['never', 'false', 'per_student']
+
+    #     for rerandomize in rerandomize_values:
+    #         # Randomize turned off
+    #         module = CapaFactory.create(rerandomize=rerandomize, attempts=0, done=True)
+
+    #         # Expect that we can submit successfully
+    #         get_request_dict = {CapaFactory.input_key(): '3.14'}
+    #         result = module.check_problem(get_request_dict)
+
+    #         self.assertEqual(result['success'], 'correct')
+
+    #         # Expect that number of attempts IS incremented
+    #         self.assertEqual(module.attempts, 1)
 
     # def test_reset_problem(self):
     #     module = CapaFactory.create(done=True)
