@@ -908,7 +908,7 @@ class CapaModule(CapaFields, XModule):
 
         return {'grade': score['score'], 'max_grade': score['total']}
 
-    def check_problem(self, data, current_time=datetime.datetime.now(UTC())):
+    def check_problem(self, data, override_time=False):
         """
         Checks whether answers to a problem are correct
 
@@ -922,6 +922,11 @@ class CapaModule(CapaFields, XModule):
 
         answers = self.make_dict_of_responses(data)
         event_info['answers'] = convert_files_to_filenames(answers)
+
+        # Can override current time
+        current_time = datetime.datetime.now(UTC())
+        if override_time is not False:
+            current_time = override_time
 
         # Too late. Cannot submit
         if self.closed():
@@ -946,7 +951,7 @@ class CapaModule(CapaFields, XModule):
                 return {'success': msg, 'html': ''}  # Prompts a modal dialog in ajax callback
 
         # Wait time between resets
-        if self.last_submission_time is not None:
+        if self.last_submission_time is not None and self.submission_wait_seconds != 0:
             if (current_time - self.last_submission_time).total_seconds() < self.submission_wait_seconds:
                 seconds_left = int(self.submission_wait_seconds - (current_time - self.last_submission_time).total_seconds())
                 msg = u'You must wait at least {w} between submissions. {s} remaining.'.format(
@@ -961,8 +966,7 @@ class CapaModule(CapaFields, XModule):
             self.set_last_submission_time()
 
         except (StudentInputError, ResponseError, LoncapaProblemError) as inst:
-            log.warning("StudentInputError in capa_module:problem_check",
-                        exc_info=True)
+            log.warning("StudentInputError in capa_module:problem_check", exc_info=True)
 
             # Save the user's state before failing
             self.set_state_from_lcp()
@@ -1013,9 +1017,7 @@ class CapaModule(CapaFields, XModule):
         # render problem into HTML
         html = self.get_problem_html(encapsulate=False)
 
-        return {'success': success,
-                'contents': html,
-                }
+        return {'success': success, 'contents': html}
 
     def pretty_print_seconds(self, num_seconds):
         """
@@ -1025,9 +1027,21 @@ class CapaModule(CapaFields, XModule):
             plural = "s" if num_seconds > 1 else ""
             return "%i second%s" % (num_seconds, plural)
         elif(num_seconds < 60 * 60):
-            return "%i min, %i sec" % (int(num_seconds / 60), num_seconds % 60)
+            min_display = int(num_seconds / 60)
+            sec_display = num_seconds % 60
+            plural = "s" if min_display > 1 else ""
+            if sec_display == 0:
+                return "%i minute%s" % (min_display, plural)
+            else:
+                return "%i min, %i sec" % (min_display, sec_display)
         else:
-            return "%i hrs, %i min, %i sec" % (int(num_seconds / 3600), int((num_seconds % 3600) / 60), (num_seconds % 60))
+            hr_display = int(num_seconds / 3600)
+            min_display = int((num_seconds % 3600) / 60)
+            sec_display = num_seconds % 60
+            if sec_display == 0:
+                return "%i hr, %i min" % (hr_display, min_display)
+            else:
+                return "%i hr, %i min, %i sec" % (hr_display, min_display, sec_display)
 
     def rescore_problem(self):
         """

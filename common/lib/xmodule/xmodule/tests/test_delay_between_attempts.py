@@ -5,29 +5,17 @@ Tests the logic of problems with a delay between attempt submissions
 import unittest
 import textwrap
 import datetime
-import json
-import random
-import os
-import textwrap
-import unittest
 
-from mock import Mock, patch
-import webob
-from webob.multidict import MultiDict
+from mock import Mock
 
 import xmodule
-from xmodule.tests import DATA_DIR
-from capa.responsetypes import (StudentInputError, LoncapaProblemError,
-                                ResponseError)
-from capa.xqueue_interface import XQueueInterface
-from xmodule.capa_module import CapaModule, ComplexEncoder
+from xmodule.capa_module import CapaModule
 from xmodule.modulestore import Location
 from xblock.field_data import DictFieldData
 from xblock.fields import ScopeIds
 
 from . import get_test_system
 from pytz import UTC
-from capa.correctmap import CorrectMap
 
 
 class CapaFactory(object):
@@ -51,6 +39,9 @@ class CapaFactory(object):
 
     @classmethod
     def next_num(cls):
+        """
+        Return the next cls number
+        """
         cls.num += 1
         return cls.num
 
@@ -212,17 +203,17 @@ class XModuleQuizAttemptsDelayTest(unittest.TestCase):
         # Already attempted once (just now) and thus has a submitted time
         num_attempts = 1
         last_submitted_time = datetime.datetime.now(UTC)
-        now = last_submitted_time
 
         # Many attempts remaining
-        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted_time, submission_wait_seconds=0)
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=0)
 
         # Simulate problem is not completed yet
         module.done = False
 
         # Expect that we can submit
         get_request_dict = {CapaFactory.input_key(): '3.14'}
-        result = module.check_problem(get_request_dict, now)
+        result = module.check_problem(get_request_dict)
 
         # Successfully submitted and answered
         # Also, the number of attempts should increment by 1
@@ -235,7 +226,8 @@ class XModuleQuizAttemptsDelayTest(unittest.TestCase):
         last_submitted_time = datetime.datetime.now(UTC)
 
         # Many attempts remaining
-        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted_time, submission_wait_seconds=600)
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=123)
 
         # Simulate problem is not completed yet
         module.done = False
@@ -249,16 +241,17 @@ class XModuleQuizAttemptsDelayTest(unittest.TestCase):
         self.assertRegexpMatches(result['success'], r"You must wait at least.*")
         self.assertEqual(module.attempts, num_attempts)
 
-    def test_submit_quiz_too_soon_exact_times_established(self):
+    def test_submit_quiz_too_soon(self):
         # Already attempted once (just now)
         num_attempts = 1
 
-        # Set up exact times
-        last_submitted = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
         considered_now = datetime.datetime(2013, 12, 6, 0, 18, 36)
 
-        now = datetime.datetime.now(UTC)
-        module = CapaFactory.create(attempts=num_attempts, max_attempts=99, last_submission_time=last_submitted, submission_wait_seconds=180)
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=180)
 
         # Simulate problem is not completed yet
         module.done = False
@@ -269,571 +262,172 @@ class XModuleQuizAttemptsDelayTest(unittest.TestCase):
 
         # You should get a dialog that tells you to wait 2 minutes
         # Also, the number of attempts should not be incremented
-        self.assertRegexpMatches(result['success'], r"You must wait at least 3 min, 0 sec between submissions. 2 min, 0 sec remaining\..*")
+        self.assertRegexpMatches(result['success'], r"You must wait at least 3 minutes between submissions. 2 minutes remaining\..*")
         self.assertEqual(module.attempts, num_attempts)
 
-    # def test_check_problem_resubmitted_no_randomize(self):
-    #     rerandomize_values = ['never', 'false', 'per_student']
-
-    #     for rerandomize in rerandomize_values:
-    #         # Randomize turned off
-    #         module = CapaFactory.create(rerandomize=rerandomize, attempts=0, done=True)
-
-    #         # Expect that we can submit successfully
-    #         get_request_dict = {CapaFactory.input_key(): '3.14'}
-    #         result = module.check_problem(get_request_dict)
-
-    #         self.assertEqual(result['success'], 'correct')
-
-    #         # Expect that number of attempts IS incremented
-    #         self.assertEqual(module.attempts, 1)
-
-    # def test_reset_problem(self):
-    #     module = CapaFactory.create(done=True)
-    #     module.new_lcp = Mock(wraps=module.new_lcp)
-    #     module.choose_new_seed = Mock(wraps=module.choose_new_seed)
-
-    #     # Stub out HTML rendering
-    #     with patch('xmodule.capa_module.CapaModule.get_problem_html') as mock_html:
-    #         mock_html.return_value = "<div>Test HTML</div>"
-
-    #         # Reset the problem
-    #         get_request_dict = {}
-    #         result = module.reset_problem(get_request_dict)
-
-    #     # Expect that the request was successful
-    #     self.assertTrue('success' in result and result['success'])
-
-    #     # Expect that the problem HTML is retrieved
-    #     self.assertTrue('html' in result)
-    #     self.assertEqual(result['html'], "<div>Test HTML</div>")
-
-    #     # Expect that the problem was reset
-    #     module.new_lcp.assert_called_once_with(None)
-
-    # def test_targeted_feedback_not_finished(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solution explanation-id="feedbackC">
-    #         <div class="detailed-solution">
-    #             <p>Explanation</p>
-    #             <p>This is the solution explanation</p>
-    #             <p>Not much to explain here, sorry!</p>
-    #         </div>
-    #         </solution>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<div>.*'wrong-1'.*'wrong-2'.*'correct-1'.*'wrong-3'.*</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback1|feedback2|feedback3|feedbackC")
-
-    # def test_targeted_feedback_student_answer1(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solution explanation-id="feedbackC">
-    #         <div class="detailed-solution">
-    #             <p>Explanation</p>
-    #             <p>This is the solution explanation</p>
-    #             <p>Not much to explain here, sorry!</p>
-    #         </div>
-    #         </solution>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_3'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedback3\">.*3rd WRONG solution")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback1|feedback2|feedbackC")
-
-    # def test_targeted_feedback_student_answer2(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solution explanation-id="feedbackC">
-    #         <div class="detailed-solution">
-    #             <p>Explanation</p>
-    #             <p>This is the solution explanation</p>
-    #             <p>Not much to explain here, sorry!</p>
-    #         </div>
-    #         </solution>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_0'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedback1\">.*1st WRONG solution")
-    #     self.assertRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback2|feedback3|feedbackC")
-
-    # def test_targeted_feedback_show_solution_explanation(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="alwaysShowCorrectChoiceExplanation">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solution explanation-id="feedbackC">
-    #         <div class="detailed-solution">
-    #             <p>Explanation</p>
-    #             <p>This is the solution explanation</p>
-    #             <p>Not much to explain here, sorry!</p>
-    #         </div>
-    #         </solution>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_0'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedback1\">.*1st WRONG solution")
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedbackC\".*solution explanation")
-    #     self.assertNotRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback2|feedback3")
-
-    # def test_targeted_feedback_no_show_solution_explanation(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solution explanation-id="feedbackC">
-    #         <div class="detailed-solution">
-    #             <p>Explanation</p>
-    #             <p>This is the solution explanation</p>
-    #             <p>Not much to explain here, sorry!</p>
-    #         </div>
-    #         </solution>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_0'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedback1\">.*1st WRONG solution")
-    #     self.assertNotRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedbackC\".*solution explanation")
-    #     self.assertRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback2|feedback3|feedbackC")
-
-    # def test_targeted_feedback_with_solutionset_explanation(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="alwaysShowCorrectChoiceExplanation">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #             <choice correct="true" explanation-id="feedbackC2">correct-2</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback2">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 2nd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC2">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on the other solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solutionset>
-    #             <solution explanation-id="feedbackC2">
-    #             <div class="detailed-solution">
-    #                 <p>Explanation</p>
-    #                 <p>This is the other solution explanation</p>
-    #                 <p>Not much to explain here, sorry!</p>
-    #             </div>
-    #             </solution>
-    #         </solutionset>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_0'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedback1\">.*1st WRONG solution")
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedbackC2\".*other solution explanation")
-    #     self.assertNotRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback2|feedback3")
-
-    # def test_targeted_feedback_no_feedback_for_selected_choice1(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="alwaysShowCorrectChoiceExplanation">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solutionset>
-    #             <solution explanation-id="feedbackC">
-    #             <div class="detailed-solution">
-    #                 <p>Explanation</p>
-    #                 <p>This is the solution explanation</p>
-    #                 <p>Not much to explain here, sorry!</p>
-    #             </div>
-    #             </solution>
-    #         </solutionset>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_1'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedbackC\".*solution explanation")
-    #     self.assertNotRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback1|feedback3")
-
-    # def test_targeted_feedback_no_feedback_for_selected_choice2(self):
-    #     xml_str = textwrap.dedent("""
-    #         <problem>
-    #         <p>What is the correct answer?</p>
-    #         <multiplechoiceresponse targeted-feedback="">
-    #           <choicegroup type="MultipleChoice">
-    #             <choice correct="false" explanation-id="feedback1">wrong-1</choice>
-    #             <choice correct="false" explanation-id="feedback2">wrong-2</choice>
-    #             <choice correct="true" explanation-id="feedbackC">correct-1</choice>
-    #             <choice correct="false" explanation-id="feedback3">wrong-3</choice>
-    #           </choicegroup>
-    #         </multiplechoiceresponse>
-
-    #         <targetedfeedbackset>
-    #             <targetedfeedback explanation-id="feedback1">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 1st WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedback3">
-    #             <div class="detailed-targeted-feedback">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>This is the 3rd WRONG solution</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #             <targetedfeedback explanation-id="feedbackC">
-    #             <div class="detailed-targeted-feedback-correct">
-    #                 <p>Targeted Feedback</p>
-    #                 <p>Feedback on your correct solution...</p>
-    #             </div>
-    #             </targetedfeedback>
-
-    #         </targetedfeedbackset>
-
-    #         <solutionset>
-    #             <solution explanation-id="feedbackC">
-    #             <div class="detailed-solution">
-    #                 <p>Explanation</p>
-    #                 <p>This is the solution explanation</p>
-    #                 <p>Not much to explain here, sorry!</p>
-    #             </div>
-    #             </solution>
-    #         </solutionset>
-    #     </problem>
-
-    #     """)
-
-    #     problem = new_loncapa_problem(xml_str)
-    #     problem.done = True
-    #     problem.student_answers = {'1_2_1': 'choice_1'}
-
-    #     the_html = problem.get_html()
-    #     without_new_lines = the_html.replace("\n", "")
-
-    #     self.assertNotRegexpMatches(without_new_lines, r"<targetedfeedback explanation-id=\"feedbackC\".*solution explanation")
-    #     self.assertRegexpMatches(without_new_lines, r"<div>\{.*'1_solution_1'.*\}</div>")
-    #     self.assertNotRegexpMatches(without_new_lines, r"feedback1|feedback3|feedbackC")
+    def test_submit_quiz_1_second_too_soon(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 0, 20, 35)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=180)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # You should get a dialog that tells you to wait 2 minutes
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least 3 minutes between submissions. 1 second remaining\..*")
+        self.assertEqual(module.attempts, num_attempts)
+
+    def test_submit_quiz_as_soon_as_allowed(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 0, 20, 36)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=180)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Expect that we can submit
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # Successfully submitted and answered
+        # Also, the number of attempts should increment by 1
+        self.assertEqual(result['success'], 'correct')
+        self.assertEqual(module.attempts, num_attempts + 1)
+
+    def test_submit_quiz_after_delay_expired(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 0, 24, 0)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=180)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Expect that we can submit
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # Successfully submitted and answered
+        # Also, the number of attempts should increment by 1
+        self.assertEqual(result['success'], 'correct')
+        self.assertEqual(module.attempts, num_attempts + 1)
+
+    def test_still_cannot_submit_after_max_attempts(self):
+        # Already attempted once (just now) and thus has a submitted time
+        num_attempts = 99
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 0, 24, 0)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=180)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Expect that we cannot submit
+        with self.assertRaises(xmodule.exceptions.NotFoundError):
+            get_request_dict = {CapaFactory.input_key(): '3.14'}
+            module.check_problem(get_request_dict, considered_now)
+
+        # Expect that number of attempts NOT incremented
+        self.assertEqual(module.attempts, num_attempts)
+
+    def test_submit_quiz_with_long_delay(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 2, 15, 35)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=60 * 60 * 2)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # You should get a dialog that tells you to wait 2 minutes
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least 2 hr, 0 min between submissions. 2 min, 1 sec remaining\..*")
+        self.assertEqual(module.attempts, num_attempts)
+
+    def test_submit_quiz_with_involved_pretty_print(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = datetime.datetime(2013, 12, 6, 1, 15, 40)
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=60 * 60 * 2 + 63)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # You should get a dialog that tells you to wait 2 minutes
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least 2 hr, 1 min, 3 sec between submissions. 1 hr, 2 min, 59 sec remaining\..*")
+        self.assertEqual(module.attempts, num_attempts)
+
+    def test_submit_quiz_with_nonplural_pretty_print(self):
+        # Already attempted once (just now)
+        num_attempts = 1
+
+        # Specify two times
+        last_submitted_time = datetime.datetime(2013, 12, 6, 0, 17, 36)
+        considered_now = last_submitted_time
+
+        # Many attempts remaining
+        module = CapaFactory.create(attempts=num_attempts, max_attempts=99,
+                                    last_submission_time=last_submitted_time, submission_wait_seconds=60)
+
+        # Simulate problem is not completed yet
+        module.done = False
+
+        # Check the problem
+        get_request_dict = {CapaFactory.input_key(): '3.14'}
+        result = module.check_problem(get_request_dict, considered_now)
+
+        # You should get a dialog that tells you to wait 2 minutes
+        # Also, the number of attempts should not be incremented
+        self.assertRegexpMatches(result['success'], r"You must wait at least 1 minute between submissions. 1 minute remaining\..*")
+        self.assertEqual(module.attempts, num_attempts)
