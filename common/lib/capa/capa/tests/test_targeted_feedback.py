@@ -17,6 +17,69 @@ class CapaTargetedFeedbackTest(unittest.TestCase):
         super(CapaTargetedFeedbackTest, self).setUp()
         self.system = test_system()
 
+    def test_no_targeted_feedback(self):
+        xml_str = textwrap.dedent("""
+            <problem>
+            <p>What is the correct answer?</p>
+            <multiplechoiceresponse>
+              <choicegroup type="MultipleChoice">
+                <choice correct="false" explanation-id="feedback1">wrong-1</choice>
+                <choice correct="false" explanation-id="feedback2">wrong-2</choice>
+                <choice correct="true" explanation-id="feedbackC">correct-1</choice>
+                <choice correct="false" explanation-id="feedback3">wrong-3</choice>
+              </choicegroup>
+            </multiplechoiceresponse>
+
+            <targetedfeedbackset>
+                <targetedfeedback explanation-id="feedback1">
+                <div class="detailed-targeted-feedback">
+                    <p>Targeted Feedback</p>
+                    <p>This is the 1st WRONG solution</p>
+                </div>
+                </targetedfeedback>
+
+                <targetedfeedback explanation-id="feedback2">
+                <div class="detailed-targeted-feedback">
+                    <p>Targeted Feedback</p>
+                    <p>This is the 2nd WRONG solution</p>
+                </div>
+                </targetedfeedback>
+
+                <targetedfeedback explanation-id="feedback3">
+                <div class="detailed-targeted-feedback">
+                    <p>Targeted Feedback</p>
+                    <p>This is the 3rd WRONG solution</p>
+                </div>
+                </targetedfeedback>
+
+                <targetedfeedback explanation-id="feedbackC">
+                <div class="detailed-targeted-feedback-correct">
+                    <p>Targeted Feedback</p>
+                    <p>Feedback on your correct solution...</p>
+                </div>
+                </targetedfeedback>
+
+            </targetedfeedbackset>
+
+            <solution explanation-id="feedbackC">
+            <div class="detailed-solution">
+                <p>Explanation</p>
+                <p>This is the solution explanation</p>
+                <p>Not much to explain here, sorry!</p>
+            </div>
+            </solution>
+        </problem>
+
+        """)
+
+        problem = new_loncapa_problem(xml_str)
+
+        the_html = problem.get_html()
+        without_new_lines = the_html.replace("\n", "")
+
+        self.assertRegexpMatches(without_new_lines, r"<div>.*'wrong-1'.*'wrong-2'.*'correct-1'.*'wrong-3'.*</div>")
+        self.assertRegexpMatches(without_new_lines, r"feedback1|feedback2|feedback3|feedbackC")
+
     def test_targeted_feedback_not_finished(self):
         xml_str = textwrap.dedent("""
             <problem>

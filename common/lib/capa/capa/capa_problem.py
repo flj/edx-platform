@@ -398,13 +398,8 @@ class LoncapaProblem(object):
         button because no solution will show up if you were to click the "Show Answer" button
         """
 
-        query = '//multiplechoiceresponse[@targeted-feedback]'
-
-        # There are no questions with targeted feedback
-        if not tree.xpath(query):
-            return
-
-        for mult_choice_response in tree.xpath(query):
+        # Note that if there are no questions with targeted feedback, the body of the for loop is not executed
+        for mult_choice_response in tree.xpath('//multiplechoiceresponse[@targeted-feedback]'):
             show_explanation = mult_choice_response.get('targeted-feedback') == 'alwaysShowCorrectChoiceExplanation'
 
             # Grab the first choicegroup (there should only be one within each <multiplechoiceresponse> tag)
@@ -465,8 +460,6 @@ class LoncapaProblem(object):
             # Add our solution instead to the targetedfeedbackset and change its tag name
             solution_element.tag = 'targetedfeedback'
             targetedfeedbackset.append(solution_element)
-
-        return
 
     def get_html(self):
         '''
