@@ -392,7 +392,7 @@ class LoncapaProblem(object):
 
         Returns a list with 2 items:
             1. the solution_id corresponding with the chosen correct answer
-            2. (subset) list of choice nodes with 3 incorrect and 1 correct
+            2. (subset) list of choice nodes with (num_choices-1) incorrect and 1 correct choice
         """
 
         correct_choices = []
@@ -402,7 +402,9 @@ class LoncapaProblem(object):
         for choice in choices:
             if choice.get('correct') == 'true':
                 correct_choices.append(choice)
-            elif choice.get('correct') == 'false':
+            # The default behavior for a problem choice is that if there is no 'correct' attribute
+            # then the choice still shows up, but is an incorrect choice for the problem. This complies.
+            else:
                 incorrect_choices.append(choice)
 
         # Always 1 correct and num_choices at least as large as this; if not, return list with no choices
