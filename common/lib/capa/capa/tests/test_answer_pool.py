@@ -17,6 +17,49 @@ class CapaAnswerPoolTest(unittest.TestCase):
         super(CapaAnswerPoolTest, self).setUp()
         self.system = test_system()
 
+    def test_no_answer_pool(self):
+        xml_str = textwrap.dedent("""
+            <problem>
+
+            <p>What is the correct answer?</p>
+            <multiplechoiceresponse>
+              <choicegroup type="MultipleChoice">
+                <choice correct="false">wrong-1</choice>
+                <choice correct="false">wrong-2</choice>
+                <choice correct="true" explanation-id="solution1">correct-1</choice>
+                <choice correct="false">wrong-3</choice>
+                <choice correct="false">wrong-4</choice>
+                <choice correct="true" explanation-id="solution2">correct-2</choice>
+              </choicegroup>
+            </multiplechoiceresponse>
+
+            <solutionset>
+                <solution explanation-id="solution1">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 1st solution</p>
+                    <p>Not much to explain here, sorry!</p>
+                </div>
+                </solution>
+
+                <solution explanation-id="solution2">
+                <div class="detailed-solution">
+                    <p>Explanation</p>
+                    <p>This is the 2nd solution</p>
+                </div>
+                </solution>
+            </solutionset>
+
+        </problem>
+
+        """)
+
+        problem = new_loncapa_problem(xml_str)
+        problem.seed = 723
+        the_html = problem.get_html()
+        self.assertRegexpMatches(the_html, r"<div>.*\[.*'wrong-1'.*'wrong-2'.*'correct-1'.*wrong-3'.*'wrong-4'.*'correct-2'.*\].*</div>")
+        self.assertRegexpMatches(the_html, r"<div>\{.*'1_solution_1'.*'1_solution_2'.*\}</div>")
+
     def test_answer_pool_4_choices_1_multiplechoiceresponse_seed1(self):
         xml_str = textwrap.dedent("""
             <problem>
@@ -59,6 +102,8 @@ class CapaAnswerPoolTest(unittest.TestCase):
         the_html = problem.get_html()
         self.assertRegexpMatches(the_html, r"<div>.*\[.*'wrong-3'.*'wrong-1'.*'wrong-2'.*'correct-2'.*\].*</div>")
         self.assertRegexpMatches(the_html, r"<div>\{.*'1_solution_2'.*\}</div>")
+        self.assertNotRegexpMatches(the_html, r"<div>.*\[.*'wrong-1'.*'wrong-2'.*'correct-1'.*wrong-3'.*'wrong-4'.*'correct-2'.*\].*</div>")
+        self.assertNotRegexpMatches(the_html, r"<div>\{.*'1_solution_1'.*'1_solution_2'.*\}</div>")
 
     def test_answer_pool_4_choices_1_multiplechoiceresponse_seed2(self):
         xml_str = textwrap.dedent("""

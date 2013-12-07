@@ -451,19 +451,17 @@ class LoncapaProblem(object):
           - if not, this method will not modify the tree
 
         These problems are colloquially known as "Gradiance" problems.
+
+        Note that if you want to randomize the choices every time a student rettempts the problem,
+        you must set the problem's "randomization" setting to "ALWAYS"
         """
 
-        query = '//multiplechoiceresponse[@answer-pool]'
-
-        # There are no questions with an answer pool
-        if not tree.xpath(query):
-            return
-
-        # Uses self.seed -- but want to randomize every time reaches this problem,
-        # so problem's "randomization" should be set to "always"
+        # Uses self.seed -- but normally you want to randomize every time reaches this problem,
+        # so if so, problem's "randomization" should be set to "always"
         rnd = Random(self.seed)
 
-        for mult_choice_response in tree.xpath(query):
+        # Note that if there are no questions with an answer pool, the body of the for loop is not executed
+        for mult_choice_response in tree.xpath('//multiplechoiceresponse[@answer-pool]'):
             # Determine number of choices to display; if invalid number of choices, skip over
             num_choices = mult_choice_response.get('answer-pool')
             if not num_choices.isdigit():
@@ -496,8 +494,6 @@ class LoncapaProblem(object):
                 for solution in solutions:
                     if solution.get('explanation-id') != solution_id:
                         solutionset.remove(solution)
-
-        return
 
     def get_html(self):
         '''
